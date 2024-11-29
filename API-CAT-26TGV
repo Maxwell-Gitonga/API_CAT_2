@@ -1,3 +1,4 @@
+QUESTION 1
 models.py
 (
 from django.db import models
@@ -91,3 +92,127 @@ Created URL routing for the views (urls.py).
 Defined views to handle data (views.py).
 Created templates to render the data (templates/).
 Ran the server and tested the app.
+
+
+
+QUESTION 2
+app.py
+# app.py
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# In-memory database (list of products)
+products = []
+
+# Product class (for simplicity)
+class Product:
+    def __init__(self, name, description, price):
+        self.name = name
+        self.description = description
+        self.price = price
+
+# POST /products - Create a new product
+@app.route('/products', methods=['POST'])
+def create_product():
+    data = request.get_json()  # Get the JSON data from the request
+    if 'name' not in data or 'description' not in data or 'price' not in data:
+        return jsonify({'message': 'Bad request, missing fields'}), 400
+
+    new_product = Product(
+        name=data['name'],
+        description=data['description'],
+        price=data['price']
+    )
+    products.append(new_product)  # Add the new product to the in-memory list
+
+    return jsonify({
+        'message': 'Product created successfully',
+        'product': {
+            'name': new_product.name,
+            'description': new_product.description,
+            'price': new_product.price
+        }
+    }), 201
+
+# GET /products - Retrieve all products
+@app.route('/products', methods=['GET'])
+def get_products():
+    product_list = [{'name': p.name, 'description': p.description, 'price': p.price} for p in products]
+    return jsonify(product_list)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+client.py
+# client.py
+import requests
+import json
+
+# URL of the API
+API_URL = "http://127.0.0.1:5000/products"
+
+# Function to add a product
+def add_product(name, description, price):
+    product_data = {
+        "name": name,
+        "description": description,
+        "price": price
+    }
+    response = requests.post(API_URL, json=product_data)
+    
+    if response.status_code == 201:
+        print(f"Product '{name}' created successfully!")
+    else:
+        print(f"Failed to create product: {response.json()['message']}")
+
+# Function to get all products
+def get_products():
+    response = requests.get(API_URL)
+    
+    if response.status_code == 200:
+        products = response.json()
+        print("List of Products:")
+        for product in products:
+            print(f"- {product['name']} (Price: {product['price']})")
+    else:
+        print("Failed to retrieve products")
+
+# Example usage
+if __name__ == "__main__":
+    # Add a new product
+    add_product("Smartphone", "A feature-rich smartphone", 899.99)
+
+    # Retrieve and print all products
+    get_products()
+
+
+README.md File
+# Flask REST API - Products
+
+## Setup Instructions
+
+1. **Install dependencies**:
+   - Install Flask:
+     ```bash
+     pip install Flask
+     ```
+   - Install requests (for the client script):
+     ```bash
+     pip install requests
+     ```
+
+2. **Run the API**:
+   - Start the Flask server:
+     ```bash
+     python app.py
+     ```
+
+3. **Test the API**:
+   - Use Postman or the `client.py` script to test the API.
+
+## Endpoints
+- **POST /products**: Add a new product.
+- **GET /products**: Retrieve the list of all products.
+
